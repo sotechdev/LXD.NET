@@ -1,4 +1,4 @@
-﻿using LXD;
+using LXD;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +23,7 @@ namespace LXDTests
         [TestMethod]
         public void Container_ExecSimpleCommand()
         {
-            ClientWebSocket ws = s_client.Containers[0].Exec(new[] { "uname" }).First();
+            ClientWebSocket ws = ((LXD.Domain.Container.ContainerExecResult.ContainerExecResultWithWebSockets)(s_client.Containers[0].Exec(new[] { "uname" }).Result)).StandardError;
             string stdouterr = Task.Run(() => ws.ReadLinesAsync()).Result;
 
             Assert.AreEqual("Linux\r\n", stdouterr);
@@ -32,8 +32,8 @@ namespace LXDTests
         [TestMethod]
         public void Container_ExecNonInteractiveCommand()
         {
-            IEnumerable<ClientWebSocket> wss = s_client.Containers[0].Exec(new[] { "uname" }, interactive: false);
-            string stdout = Task.Run(() => wss.Skip(1).First().ReadLinesAsync()).Result;
+            ClientWebSocket ws = ((LXD.Domain.Container.ContainerExecResult.ContainerExecResultWithWebSockets)(s_client.Containers[0].Exec(new[] { "uname" }, interactive: false).Result)).StandardOutput;
+            string stdout = Task.Run(() => ws.ReadLinesAsync()).Result;
 
             Assert.AreEqual("Linux\n", stdout);
         }
@@ -42,10 +42,10 @@ namespace LXDTests
         [Ignore]
         public void Container_ExecCommandWithInput()
         {
-            ClientWebSocket ws = s_client.Containers[0].Exec(new[] { "cat" }).First();
+            var res = (LXD.Domain.Container.ContainerExecResult.ContainerExecResultWithWebSockets)(s_client.Containers[0].Exec(new[] { "cat" }, interactive: false).Result);
 
-            Task.Run(() => ws.WriteAsync("Yo\r\n")).Wait();
-            string output = Task.Run(() => ws.ReadLinesAsync()).Result;
+            Task.Run(() => res.StandardInput.WriteAsync("Yo\r\n")).Wait();
+            string output = Task.Run(() => res.StandardOutput.ReadLinesAsync()).Result;
 
             Assert.AreEqual("Yo\r\n", output);
         }

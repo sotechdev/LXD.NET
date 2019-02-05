@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -118,9 +118,9 @@ namespace LXD
             Contract.Requires(token != null);
 
             T obj = token.ToObject<T>(new JsonSerializer());
-            if (obj is RemoteObject)
+            if (obj is RemoteObject remoteObject)
             {
-                (obj as RemoteObject).API = this;
+                remoteObject.API = this;
             }
 
             return obj;

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
@@ -97,9 +97,10 @@ namespace LXD.Domain
             public bool Stateful;
         }
 
-        public IEnumerable<ClientWebSocket> Exec(string[] command,
+        public Task<ContainerExecResult> Exec(string[] command,
             Dictionary<string, string> environment = null,
             bool waitForWebSocket = true,
+            bool recordOutput = false,
             bool interactive = true,
             int width = 80,
             int height = 25)
@@ -109,35 +110,43 @@ namespace LXD.Domain
                 Command = command,
                 Environment = environment,
                 WaitForWebSocket = waitForWebSocket,
+                RecordOutput = recordOutput,
                 Interactive = interactive,
                 Width = width,
                 Height = height,
             };
 
+            return Exec(exec);
+        }
+
+        public Task<ContainerExecResult> Exec(ContainerExec exec)
+        {
             JToken response = API.Post($"/{Client.Version}/containers/{Name}/exec", exec);
             string operationUrl = response.Value<string>("operation");
-            if (waitForWebSocket == false)
+            return ContainerExecResult.Create(API, exec, response, operationUrl);
+        }
+
+        public Task<ContainerExecResult> TestExec(string[] command,
+            Dictionary<string, string> environment = null,
+            bool waitForWebSocket = true,
+            bool recordOutput = false,
+            bool interactive = true,
+            int width = 80,
+            int height = 25)
+        {
+            ContainerExec exec = new ContainerExec()
             {
-                API.WaitForOperationComplete(response);
-                // wait-for-websocket is false. Nothing to return.
-                return null;
-            }
-
-            response = API.Get(operationUrl);
-
-            int fdsN = interactive ? 1 : 3;
-
-            List<Task<ClientWebSocket>> tasks = new List<Task<ClientWebSocket>>();
-            for (int i = 0; i < fdsN; i++)
-            {
-                string fdsSecret = response.SelectToken($"metadata.metadata.fds.{i}").Value<string>();
-                string wsUrl = $"{API.BaseUrlWebSocket}{operationUrl}/websocket?secret={fdsSecret}";
-                Task<ClientWebSocket> task = ClientWebSocketExtensions.CreateAndConnectAsync(wsUrl);
-                tasks.Add(task);
-            }
-            Task.WaitAll(tasks.ToArray());
-
-            return tasks.Select(t => t.Result);
+                Command = command,
+                Environment = environment,
+                WaitForWebSocket = waitForWebSocket,
+                RecordOutput = recordOutput,
+                Interactive = interactive,
+                Width = width,
+                Height = height,
+            };
+            JToken response = API.Post($"/{Client.Version}/containers/{Name}/exec", exec);
+            string operationUrl = response.Value<string>("operation");
+            return ContainerExecResult.ContainerExecResultWithWebSockets.TestCreate(API, exec, response, operationUrl);
         }
 
         public struct ContainerExec
@@ -146,9 +155,132 @@ namespace LXD.Domain
             public Dictionary<string, string> Environment;
             [JsonProperty("wait-for-websocket")]
             public bool WaitForWebSocket;
+            [JsonProperty("record-output")]
+            public bool RecordOutput;
             public bool Interactive;
             public int Width;
             public int Height;
+        }
+
+        public class ContainerExecResult
+        {
+            public ContainerExec ExecSettings { get; private set; }
+
+            protected ContainerExecResult(ContainerExec exec)
+            {
+                ExecSettings = exec;
+            }
+
+            public static async Task<ContainerExecResult> Create(API API, ContainerExec exec, JToken response, string operationUrl) {
+                if (exec.WaitForWebSocket)
+                {
+                    response = API.Get(operationUrl);
+                    return await ContainerExecResultWithWebSockets.Create(API, exec, response, operationUrl);
+                }
+                else if (exec.Interactive == false && exec.RecordOutput)
+                {
+                    response = API.Get(operationUrl);
+                    return ContainerExecResultWithRecords.Create(API, exec, response, operationUrl);
+                }
+                else
+                {
+                    API.WaitForOperationComplete(response);
+                    return new ContainerExecResult(exec);
+                }
+            }
+
+            public class ContainerExecResultWithWebSockets : ContainerExecResult, IDisposable
+            {
+                private ClientWebSocket[] WebSockets { get; set; }
+
+                public ClientWebSocket StandardOutput => WebSockets?.Length >= 3 ? WebSockets[1] : null;
+                public ClientWebSocket StandardInput => WebSockets?.Length >= 1 ? WebSockets[0] : null;
+                public ClientWebSocket StandardError => WebSockets?.Length >= 4 ? WebSockets[2] : null;
+                public ClientWebSocket Control => WebSockets?.Length >= 2 ? WebSockets[WebSockets.Length - 1] : null;
+
+                protected ContainerExecResultWithWebSockets(ContainerExec exec) : base(exec) { }
+
+                public static async new Task<ContainerExecResult> Create(API API, ContainerExec exec, JToken response, string operationUrl)
+                {
+                    var result = new ContainerExecResultWithWebSockets(exec);
+                    var webSocketStrings = exec.Interactive ? new[] { "0", "control" } : new[] { "0", "1", "2", "control" };
+                    var sockets = new List<ClientWebSocket>();
+                    foreach (var i in webSocketStrings)
+                    {
+                        string fdsSecret = response.SelectToken($"metadata.metadata.fds.{i}").Value<string>();
+                        string wsUrl = $"{API.BaseUrlWebSocket}{operationUrl}/websocket?secret={fdsSecret}";
+                        sockets.Add(await ClientWebSocketExtensions.CreateAndConnectAsync(wsUrl, API));
+                    }
+                    result.WebSockets = sockets.ToArray();
+                    return result;
+                }
+
+                [Obsolete]
+                public static async Task<ContainerExecResult> TestCreate(API API, ContainerExec exec, JToken response, string operationUrl)
+                {
+                    var result = new ContainerExecResultWithWebSockets(exec);
+                    var webSocketStrings = exec.Interactive ? new[] { "0", "control" } : new[] { "0", "1", "2", "control" };
+                    var tasks = new List<ClientWebSocket>();
+                    foreach (var i in webSocketStrings.Take(1))
+                    {
+                        string fdsSecret = response.SelectToken($"metadata.metadata.fds.{i}").Value<string>();
+                        string wsUrl = $"{API.BaseUrlWebSocket}{operationUrl.Substring(1)}/websocket?secret={fdsSecret}";
+                        tasks.Add(await ClientWebSocketExtensions.CreateAndConnectAsync(wsUrl, API));
+                    }
+                    result.WebSockets = tasks.ToArray();
+                    return result;
+                }
+
+                public async Task CloseAsync() => await CloseAsync(System.Threading.CancellationToken.None);
+
+                public async Task CloseAsync(System.Threading.CancellationToken cancellationToken)
+                {
+                    if (WebSockets != null)
+                        foreach (var ws in WebSockets)
+                        {
+                            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken);
+                        }
+                }
+
+                public void Dispose()
+                {
+                    if(WebSockets != null)
+                        foreach(var ws in WebSockets)
+                        {
+                            ws?.Dispose();
+                        }
+                }
+            }
+
+            public class ContainerExecResultWithRecords : ContainerExecResult
+            {
+                protected ContainerExecResultWithRecords(ContainerExec exec) : base(exec) { }
+
+                protected string[] RecordUrls;
+                protected API API;
+
+                public async Task<string> GetStandardOutput()
+                {
+                    var ret = await API.ExecuteTaskAsync(new RestRequest(RecordUrls[0]));
+                    return ret.Content;
+                }
+
+                public async Task<string> GetStandardError()
+                {
+                    var ret = await API.ExecuteTaskAsync(new RestRequest(RecordUrls[1]));
+                    return ret.Content;
+                }
+
+                public static new ContainerExecResult Create(API api, ContainerExec exec, JToken response, string operationUrl)
+                {
+                    var result = new ContainerExecResultWithRecords(exec);
+                    result.API = api;
+                    result.RecordUrls = (new[] { "1", "2" }).Select(s =>
+                        response.SelectToken($"metadata.metadata.output.{s}").Value<string>()
+                    ).ToArray();
+                    return result;
+                }
+            }
         }
 
         public string GetFile(string path)

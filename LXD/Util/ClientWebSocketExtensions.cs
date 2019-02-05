@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -8,9 +8,14 @@ namespace LXD
 {
     public static class ClientWebSocketExtensions
     {
-        public static async Task<ClientWebSocket> CreateAndConnectAsync(string url)
+        public static async Task<ClientWebSocket> CreateAndConnectAsync(string url, API API = null)
         {
             ClientWebSocket ws = new ClientWebSocket();
+            //TLS is not unrelated
+            //ws.Options.AddSubProtocol("Tls1.2");
+            //ws.Options.AddSubProtocol("Tls1.1");
+            //if (API != null)
+            //    ws.Options.ClientCertificates = API.ClientCertificates;
             await ws.ConnectAsync(new Uri(url), CancellationToken.None);
             return ws;
         }

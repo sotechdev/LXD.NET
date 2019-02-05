@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28527.54
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LXD", "LXD.csproj", "{CA02C049-29CB-483B-902D-39C917D82C4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LXD", "LXD.csproj", "{CA02C049-29CB-483B-902D-39C917D82C4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LXDTests", "..\LXDTests\LXDTests.csproj", "{E4E1256A-B956-4A51-A4A0-C4D275F321D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LXDTests", "..\LXDTests\LXDTests.csproj", "{E4E1256A-B956-4A51-A4A0-C4D275F321D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +24,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8F0CF0CA-BA40-4988-A4FB-9D1A42EC7600}
 	EndGlobalSection
 EndGlobal

@@ -221,7 +221,7 @@ namespace LXD.Domain
                     var result = new ContainerExecResultWithWebSockets(exec);
                     var webSocketStrings = exec.Interactive ? new[] { "0", "control" } : new[] { "0", "1", "2", "control" };
                     var tasks = new List<ClientWebSocket>();
-                    foreach (var i in webSocketStrings.Take(1))
+                    foreach (var i in webSocketStrings)
                     {
                         string fdsSecret = response.SelectToken($"metadata.metadata.fds.{i}").Value<string>();
                         string wsUrl = $"{API.BaseUrlWebSocket}{operationUrl.Substring(1)}/websocket?secret={fdsSecret}";

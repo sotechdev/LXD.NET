@@ -9,6 +9,7 @@ using System.Linq;
 using LXD.Domain;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using RestSharp;
 
 namespace LXD
 {
@@ -83,6 +84,13 @@ namespace LXD
                     NewEvent?.Invoke(ws, EventArgs.Empty);
                 }
             }
+        }
+        
+        public StandardResponse PostContainer(PostContainerParameter param)
+        {
+            IRestRequest restRequest = new RestRequest($"/{Version}/containers");
+            restRequest.AddParameter("application/json", param.GetJsonText(), ParameterType.RequestBody);
+            return StandardResponse.Parse(API.Post(restRequest));
         }
     }
 }

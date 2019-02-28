@@ -194,10 +194,9 @@ namespace LXD.Domain
             WebClientEx wc = new WebClientEx() { Certificates = API.ClientCertificates };
 
             var responseByteArray = wc.UploadData(API.BaseUrl + $"{Client.Version}/containers/{Name}/files?path={path}",null, content);
-            if (wc.ResponseHeaders[HttpRequestHeader.ContentType] == "application/json")
-                return StandardResponse.Parse(System.Text.Encoding.ASCII.GetString(responseByteArray));
-            else
-                return new StandardResponse.InvalidResponse();
+            return wc.ResponseHeaders[HttpRequestHeader.ContentType] == "application/json"
+                ? StandardResponse.Parse(System.Text.Encoding.ASCII.GetString(responseByteArray))
+                : new StandardResponse.InvalidResponse();
         }
 
         public StandardResponse PostFile(string path, byte[] content, int? uid, int? gid, int? mode, FileKind type, bool? overwrite)

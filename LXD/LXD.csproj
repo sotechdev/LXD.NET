@@ -4,12 +4,13 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <ApplicationIcon />
         <StartupObject />
-        <LangVersion>latest</LangVersion>
+        <LangVersion>8.0</LangVersion>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Humanizer" Version="2.5.16" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-      <PackageReference Include="RestSharp" Version="106.6.7" />
+      <PackageReference Include="RestSharp" Version="106.6.9" />
+      <PackageReference Include="System.Net.WebHeaderCollection" Version="4.3.0" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Properties\" />

@@ -11,11 +11,6 @@ namespace LXD
         public static async Task<ClientWebSocket> CreateAndConnectAsync(string url, API API = null)
         {
             ClientWebSocket ws = new ClientWebSocket();
-            //TLS is not unrelated
-            //ws.Options.AddSubProtocol("Tls1.2");
-            //ws.Options.AddSubProtocol("Tls1.1");
-            //if (API != null)
-            //    ws.Options.ClientCertificates = API.ClientCertificates;
             await ws.ConnectAsync(new Uri(url), CancellationToken.None);
             return ws;
         }

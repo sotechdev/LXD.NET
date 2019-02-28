@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LXD.Domain
 {
-    public class Container : RemoteObject
+    public partial class Container : RemoteObject
     {
         public string Architecture;
         public Dictionary<string, string> Config;
@@ -126,29 +126,6 @@ namespace LXD.Domain
             return ContainerExecResult.Create(API, exec, response, operationUrl);
         }
 
-        public Task<ContainerExecResult> TestExec(string[] command,
-            Dictionary<string, string> environment = null,
-            bool waitForWebSocket = true,
-            bool recordOutput = false,
-            bool interactive = true,
-            int width = 80,
-            int height = 25)
-        {
-            ContainerExec exec = new ContainerExec()
-            {
-                Command = command,
-                Environment = environment,
-                WaitForWebSocket = waitForWebSocket,
-                RecordOutput = recordOutput,
-                Interactive = interactive,
-                Width = width,
-                Height = height,
-            };
-            JToken response = API.Post($"/{Client.Version}/containers/{Name}/exec", exec);
-            string operationUrl = response.Value<string>("operation");
-            return ContainerExecResult.ContainerExecResultWithWebSockets.TestCreate(API, exec, response, operationUrl);
-        }
-
         public struct ContainerExec
         {
             public string[] Command;
@@ -215,22 +192,6 @@ namespace LXD.Domain
                     return result;
                 }
 
-                [Obsolete]
-                public static async Task<ContainerExecResult> TestCreate(API API, ContainerExec exec, JToken response, string operationUrl)
-                {
-                    var result = new ContainerExecResultWithWebSockets(exec);
-                    var webSocketStrings = exec.Interactive ? new[] { "0", "control" } : new[] { "0", "1", "2", "control" };
-                    var tasks = new List<ClientWebSocket>();
-                    foreach (var i in webSocketStrings)
-                    {
-                        string fdsSecret = response.SelectToken($"metadata.metadata.fds.{i}").Value<string>();
-                        string wsUrl = $"{API.BaseUrlWebSocket}{operationUrl.Substring(1)}/websocket?secret={fdsSecret}";
-                        tasks.Add(await ClientWebSocketExtensions.CreateAndConnectAsync(wsUrl, API));
-                    }
-                    result.WebSockets = tasks.ToArray();
-                    return result;
-                }
-
                 public async Task CloseAsync() => await CloseAsync(System.Threading.CancellationToken.None);
 
                 public async Task CloseAsync(System.Threading.CancellationToken cancellationToken)
@@ -283,20 +244,6 @@ namespace LXD.Domain
             }
         }
 
-        public string GetFile(string path)
-        {
-            IRestRequest request = new RestRequest($"/{Client.Version}/containers/{Name}/files");
-            request.AddParameter("path", path);
-            return "";
-            //IRestResponse response = API.Execute(request);
-            //return response.Content;
-        }
-
-        // TODO: fill body.
-        public void PutFile(string path, byte[] content)
-        {
-            return;
-        }
 
         public ContainerState State => API.Get<ContainerState>($"/{Client.Version}/containers/{Name}/state");
         public Collection<object> Logs => new Collection<object>(API, $"/{Client.Version}/containers/{Name}/logs");

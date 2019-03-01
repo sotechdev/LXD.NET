@@ -17,17 +17,19 @@ namespace LXD
         }
 
         public static StandardResponse<T> Parse(string response, Func<JToken, T> MetadataResolver)
+            => Parse(JToken.Parse(response), MetadataResolver);
+
+        public static StandardResponse<T> Parse(JToken response, Func<JToken, T> MetadataResolver)
         {
-            JToken token = JToken.Parse(response);
-            string responseType = token.SelectToken("type").Value<string>();
+            string responseType = response.SelectToken("type").Value<string>();
             var result = responseType switch
             {
-                "error" => (StandardResponse<T>)new Error<T>(token.SelectToken("error").Value<string>(), token.SelectToken("error_code").Value<int>()),
-                "sync" => (StandardResponse<T>)new Success<T>(token.SelectToken("status_code").Value<int>()),
-                "async" => (StandardResponse<T>)new BackgroundOperation<T>(token.SelectToken("operation").Value<string>(), token.SelectToken("status_code").Value<int>()),
+                "error" => (StandardResponse<T>)new Error<T>(response.SelectToken("error").Value<string>(), response.SelectToken("error_code").Value<int>()),
+                "sync" => (StandardResponse<T>)new Success<T>(response.SelectToken("status_code").Value<int>()),
+                "async" => (StandardResponse<T>)new BackgroundOperation<T>(response.SelectToken("operation").Value<string>(), response.SelectToken("status_code").Value<int>()),
                 _ => (StandardResponse<T>)new InvalidResponse<T>()
             };
-            result.Metadata = MetadataResolver(token.SelectToken("metadata"));
+            result.Metadata = MetadataResolver(response.SelectToken("metadata"));
             return result;
         }
 
@@ -62,6 +64,15 @@ namespace LXD
             {
                 Operation = operation;
             }
+
+            public JToken Wait(API api, int? timeout)
+            {
+                var t = api.Timeout;
+                api.Timeout = System.Threading.Timeout.Infinite;
+                var res = api.Get(timeout == null ? Operation : Operation + "?timeout=" + timeout.Value.ToString());
+                api.Timeout = t;
+                return res;
+            }
         }
 #pragma warning restore CS0693
     }
@@ -76,14 +87,16 @@ namespace LXD
         }
 
         public static StandardResponse Parse(string response)
+            => Parse(JToken.Parse(response));
+
+        public static StandardResponse Parse(JToken response)
         {
-            JToken token = JToken.Parse(response);
-            string responseType = token.SelectToken("type").Value<string>();
+            string responseType = response.SelectToken("type").Value<string>();
             var result = responseType switch
             {
-                "error" => (StandardResponse)new Error(token.SelectToken("error").Value<string>(), token.SelectToken("error_code").Value<int>()),
-                "sync" => (StandardResponse)new Success(token.SelectToken("status_code").Value<int>()),
-                "async" => (StandardResponse)new BackgroundOperation(token.SelectToken("operation").Value<string>(), token.SelectToken("status_code").Value<int>()),
+                "error" => (StandardResponse)new Error(response.SelectToken("error").Value<string>(), response.SelectToken("error_code").Value<int>()),
+                "sync" => (StandardResponse)new Success(response.SelectToken("status_code").Value<int>()),
+                "async" => (StandardResponse)new BackgroundOperation(response.SelectToken("operation").Value<string>(), response.SelectToken("status_code").Value<int>()),
                 _ => (StandardResponse)new InvalidResponse()
             };
             return result;
@@ -118,6 +131,14 @@ namespace LXD
             internal BackgroundOperation(string operation, int statusCode) : base(statusCode)
             {
                 Operation = operation;
+            }
+            public JToken Wait(API api, int? timeout)
+            {
+                var t = api.Timeout;
+                api.Timeout = System.Threading.Timeout.Infinite;
+                var res = api.Get(timeout == null ? Operation : Operation + "?timeout=" + timeout.Value.ToString());
+                api.Timeout = t;
+                return res;
             }
         }
     }

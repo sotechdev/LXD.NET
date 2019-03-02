@@ -219,23 +219,25 @@ namespace LXD.Domain
 
                 protected string[] RecordUrls;
                 protected API API;
+                public int ReturnCode { get;  private set; }
 
-                public async Task<string> GetStandardOutput()
+                private async Task<string> GetOutput(int index)
                 {
-                    var ret = await API.ExecuteTaskAsync(new RestRequest(RecordUrls[0]));
+                    var t = API.Timeout;
+                    API.Timeout = System.Threading.Timeout.Infinite;
+                    var ret = await API.ExecuteTaskAsync(new RestRequest(RecordUrls[index]));
+                    API.Timeout = t;
                     return ret.Content;
                 }
 
-                public async Task<string> GetStandardError()
-                {
-                    var ret = await API.ExecuteTaskAsync(new RestRequest(RecordUrls[1]));
-                    return ret.Content;
-                }
+                public Task<string> GetStandardOutput() => GetOutput(0);
+                public Task<string> GetStandardError() => GetOutput(1);
 
                 public static new ContainerExecResult Create(API api, ContainerExec exec, JToken response, string operationUrl)
                 {
                     var result = new ContainerExecResultWithRecords(exec);
                     result.API = api;
+                    result.ReturnCode = response.SelectToken("metadata.metadata.return").Value<int>();
                     result.RecordUrls = (new[] { "1", "2" }).Select(s =>
                         response.SelectToken($"metadata.metadata.output.{s}").Value<string>()
                     ).ToArray();

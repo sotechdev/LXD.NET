@@ -21,8 +21,7 @@ namespace LXD
 
         public static StandardResponse<T> Parse(JToken response, Func<JToken, T> MetadataResolver)
         {
-            string responseType = response.SelectToken("type").Value<string>();
-            var result = responseType switch
+            var result = response.SelectToken("type").Value<string>() switch
             {
                 "error" => (StandardResponse<T>)new Error<T>(response.SelectToken("error").Value<string>(), response.SelectToken("error_code").Value<int>()),
                 "sync" => (StandardResponse<T>)new Success<T>(response.SelectToken("status_code").Value<int>()),
@@ -91,15 +90,13 @@ namespace LXD
 
         public static StandardResponse Parse(JToken response)
         {
-            string responseType = response.SelectToken("type").Value<string>();
-            var result = responseType switch
+            return response.SelectToken("type").Value<string>() switch
             {
                 "error" => (StandardResponse)new Error(response.SelectToken("error").Value<string>(), response.SelectToken("error_code").Value<int>()),
                 "sync" => (StandardResponse)new Success(response.SelectToken("status_code").Value<int>()),
                 "async" => (StandardResponse)new BackgroundOperation(response.SelectToken("operation").Value<string>(), response.SelectToken("status_code").Value<int>()),
                 _ => (StandardResponse)new InvalidResponse()
             };
-            return result;
         }
 
         public class Error : StandardResponse

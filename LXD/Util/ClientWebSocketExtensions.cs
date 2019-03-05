@@ -11,7 +11,27 @@ namespace LXD
         public static async Task<ClientWebSocket> CreateAndConnectAsync(string url, API API = null)
         {
             ClientWebSocket ws = new ClientWebSocket();
-            await ws.ConnectAsync(new Uri(url), CancellationToken.None);
+            // LXD sometimes returns '500'. So retry 10 times.
+            for (int i = 0; i < 10; ++i) {
+                try
+                {
+                    await ws.ConnectAsync(new Uri(url), CancellationToken.None);
+                    break;
+                }
+                catch(AggregateException ex) when (ex.InnerException is InvalidOperationException)
+                {
+                    if (((InvalidOperationException)ex.InnerException).Message.Contains("already"))
+                        return ws;
+                    if (i == 9)
+                        throw;
+                }
+                catch
+                {
+                    if (i == 9)
+                        throw;
+                }
+                await Task.Delay(500);
+            }
             return ws;
         }
 

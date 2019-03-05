@@ -237,9 +237,19 @@ namespace LXD.Domain
                 {
                     var result = new ContainerExecResultWithRecords(exec);
                     result.API = api;
-                    result.ReturnCode = response.SelectToken("metadata.metadata.return").Value<int>();
+                    response = response.SelectToken("metadata");
+                    if (response.SelectToken("status_code").Value<int>() == 103)
+                    {
+                        var t = api.Timeout;
+                        string op_id = response.SelectToken("id").Value<string>();
+                        api.Timeout = System.Threading.Timeout.Infinite;
+                        response = api.Get($"/1.0/operations/{op_id}/wait").SelectToken("metadata");
+                        api.Timeout = t;
+                    }
+
+                    result.ReturnCode = response.SelectToken("metadata.return").Value<int>();
                     result.RecordUrls = (new[] { "1", "2" }).Select(s =>
-                        response.SelectToken($"metadata.metadata.output.{s}").Value<string>()
+                        response.SelectToken($"metadata.output.{s}").Value<string>()
                     ).ToArray();
                     return result;
                 }

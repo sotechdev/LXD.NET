@@ -1,6 +1,11 @@
-This is fork of [automizu/LXD.NET](https://github.com/autozimu/LXD.NET).
+This is fork of [automizu/LXD.NET](https://github.com/autozimu/LXD.NET) and [GnicoJP/LXD.NET] (https://github.com/GnicoJP/LXD.NET).
 
-# LXD.NET
+
+
+
+
+
+### Original LXD.NET Documentation
 <!---
 [![Build status](https://ci.appveyor.com/api/projects/status/d9hk73a1opdlhxp9?svg=true)](https://ci.appveyor.com/project/JunfengLi/lxd-net)
 [![NuGet version](https://badge.fury.io/nu/lxd.svg)](https://www.nuget.org/packages/LXD)
@@ -8,7 +13,7 @@ This is fork of [automizu/LXD.NET](https://github.com/autozimu/LXD.NET).
 [LXD](http://www.ubuntu.com/cloud/lxd) client implemented in C#.
 
 <!---
-# Usage
+### Usage
 
 This module is available as a [NuGet package](https://www.nuget.org/packages/LXD/). One can install it using NuGet Package Console window,
 
@@ -17,7 +22,7 @@ PM> Install-Package LXD
 ```
 -->
 
-# Example
+### Example
 
 ```CSharp
 using LXD;

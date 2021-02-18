@@ -1,13 +1,13 @@
 ## SharpLXD by ImpulseMachines  
 Modified fork for utilisation in cloud provisioning services.  
 
-Goals:
-Update to .NET 5.0
-Add support / demo for VMs
-Add support for contaienr and vm provisioning via cloud-init iso for vms.
+Goals:  
+- Update to .NET 5.0
+- Add support / demo for VMs  
+- Add support for contaienr and vm provisioning via cloud-init iso for vms.  
 
-SharpLXD is based on LXD.NET and includes the work of https://github.com/autozimu/LXD.NET https://github.com/GnicoJP/LXD.NET with thanks.
-The project has been renamed to avoid confusion. This project is not intended to be compatible with LXD.NET going forward.
+SharpLXD is based on LXD.NET and includes the work of https://github.com/autozimu/LXD.NET https://github.com/GnicoJP/LXD.NET with thanks.  
+The project has been renamed to avoid confusion. This project is not intended to be compatible with LXD.NET going forward.  
 
 #### Original LXD.NET Documentation
 <!---

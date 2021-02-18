@@ -4,7 +4,7 @@ Modified fork for utilisation in cloud provisioning services.
 Goals:  
 - Update to .NET 5.0
 - Add support / demo for VMs  
-- Add support for contaienr and vm provisioning via cloud-init iso for vms.  
+- Add support for container and vm provisioning via cloud-init iso for vms.  
 
 SharpLXD is based on LXD.NET and includes the work of https://github.com/autozimu/LXD.NET https://github.com/GnicoJP/LXD.NET with thanks.  
 

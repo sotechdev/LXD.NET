@@ -7,6 +7,7 @@ Goals:
 - Add support for contaienr and vm provisioning via cloud-init iso for vms.  
 
 SharpLXD is based on LXD.NET and includes the work of https://github.com/autozimu/LXD.NET https://github.com/GnicoJP/LXD.NET with thanks.  
+
 The project has been renamed to avoid confusion. This project is not intended to be compatible with LXD.NET going forward.  
 
 #### Original LXD.NET Documentation

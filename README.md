@@ -10,6 +10,22 @@ SharpLXD is based on LXD.NET and includes the work of https://github.com/autozim
 
 The project has been renamed to avoid confusion. This project is not intended to be compatible with LXD.NET going forward.  
 
+#### Generating a pfx certificate for use with SharpLXD
+```Bash
+
+LXD Server side:  
+mkdir -p /root/.config/lxc  
+openssl req -x509 -newkey rsa:2048 -keyout /root/.config/lxc/client.key.secure -out /root/.config/lxc/client.crt -days 3650  
+openssl rsa -in /root/.config/lxc/client.key.secure -out /root/.config/lxc/client.key  
+lxc config trust add /root/.config/lxc/client.crt  
+source: https://gitlab.com/catalyst-it/devtools/vagrant-lxd/-/issues/6  
+
+Client Side:  
+openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt  
+```
+
+
+
 #### Original LXD.NET Documentation
 <!---
 [![Build status](https://ci.appveyor.com/api/projects/status/d9hk73a1opdlhxp9?svg=true)](https://ci.appveyor.com/project/JunfengLi/lxd-net)

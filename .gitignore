@@ -1,2 +1,5 @@
 LXD/packages
 *.nupkg
+.vs
+*/bin
+*/obj

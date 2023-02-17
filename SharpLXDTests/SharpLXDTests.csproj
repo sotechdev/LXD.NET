@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <ApplicationIcon />
+        <StartupObject />
+    </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\SharpLXD\SharpLXD.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Properties\" />
+    </ItemGroup>
+</Project>

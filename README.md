@@ -1,18 +1,49 @@
-# LXD.NET
+## SharpLXD by ImpulseMachines  
+Modified fork for utilisation in cloud provisioning services.  
+
+Goals:  
+- Update to .NET 5.0
+- Add support / demo for VMs  
+- Add support for container and vm provisioning via cloud-init iso for vms.  
+
+SharpLXD is based on LXD.NET and includes the work of https://github.com/autozimu/LXD.NET https://github.com/GnicoJP/LXD.NET with thanks.  
+
+The project has been renamed to avoid confusion. This project is not intended to be compatible with LXD.NET going forward.  
+
+#### Generating a pfx certificate for use with SharpLXD
+```Bash
+
+LXD Server side:  
+mkdir -p /root/.config/lxc  
+openssl req -x509 -newkey rsa:2048 -keyout /root/.config/lxc/client.key.secure -out /root/.config/lxc/client.crt -days 3650  
+openssl rsa -in /root/.config/lxc/client.key.secure -out /root/.config/lxc/client.key  
+lxc config trust add /root/.config/lxc/client.crt  
+source: https://gitlab.com/catalyst-it/devtools/vagrant-lxd/-/issues/6  
+
+Client Side:  
+openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt  
+```
+
+
+
+#### Original LXD.NET Documentation
+<!---
 [![Build status](https://ci.appveyor.com/api/projects/status/d9hk73a1opdlhxp9?svg=true)](https://ci.appveyor.com/project/JunfengLi/lxd-net)
 [![NuGet version](https://badge.fury.io/nu/lxd.svg)](https://www.nuget.org/packages/LXD)
-
+-->
 [LXD](http://www.ubuntu.com/cloud/lxd) client implemented in C#.
 
-# Usage
+<!---
+### Usage
 
 This module is available as a [NuGet package](https://www.nuget.org/packages/LXD/). One can install it using NuGet Package Console window,
 
 ```
 PM> Install-Package LXD
 ```
+-->
 
-# Example
+#### Example
 
 ```CSharp
 using LXD;
